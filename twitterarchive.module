@@ -3,7 +3,8 @@
 /**
  * @file
  *
- * 5 minute module for displaying Twitterarchive drupal from JSON
+ * Quick module for displaying Twitterarchive drupal from JSON data files
+ *
  */
 
 /**
@@ -31,25 +32,34 @@ function twitterarchive_theme() {
 }
 
 /**
- * Callback function for 'twitterarchive'
+ * Callback function for menu item 'twitterarchive'
  */
 function _twitterarchive() {
-  $data = drupal_get_path('module', 'twitterarchive') . '/data/2013_01.js';
-  $data = file_get_contents($data);
-  if ($data) {
-    // remove first line and output the data to an array
-    $data = explode("\n", $data);
-    array_shift($data);
-    $data = implode("\n", $data);
-    $data = drupal_json_decode($data);
+  // get JS data files, remove data.tweets line and merge together
+  $data_files = file_scan_directory(drupal_get_path('module', 'twitterarchive') . '/data', '/\.js$/i');
+  if (!empty($data_files)) {
+    $file_data = array();
+    foreach(array_keys($data_files) as $file) {
+      $data = @file_get_contents($file);
+      if ($data) {
+        $data = explode("\n", $data);
+        array_shift($data);
+        $data = implode("\n", $data);
+        $file_data = array_merge($file_data, drupal_json_decode($data));
+      }
+    }
+  }
+  else {
+    throw new Exception(t("No data files, please add the data/tweets/*.js files from your twitter archive download to the 'data' folder of this module"));
+  }
 
+  if (!empty($file_data)) {
     $tweets = array();
-    foreach ($data as $item) {
-      // create @username links and http links in text
-      // https://twitter.com/search?q=%23Facebook
-      $item['text'] = preg_replace('/(https?:\/\/\S+)/ie', "l('\\1', '\\1', array('absolute' => TRUE))", $item['text']);
-      $item['text'] = preg_replace('/(#[a-zA-Z_0-9]+)/ie', "l('\\1', 'https://twitter.com/search?q=' . urlencode('\\1'), array('absolute' => TRUE))", $item['text']);
-      $item['text'] = preg_replace('/@([a-zA-Z_0-9]+)/ie', "l('@\\1', 'https://twitter.com/\\1', array('absolute' => TRUE))", $item['text']);
+    foreach ($file_data as $item) {
+      // [using preg_replace_callback as the 'e' modifier is deprecated]
+      $item['text'] = preg_replace_callback('/(https?:\/\/\S+)/i', '_tweet_convert_links', $item['text']);
+      $item['text'] = preg_replace_callback('/(#[a-zA-Z_0-9]+)/i', '_tweet_convert_hashtags', $item['text']);
+      $item['text'] = preg_replace_callback('/@([a-zA-Z_0-9]+)/i', '_tweet_convert_usernames', $item['text']);
 
       $tweets[] = array(
         'id' => $item['id_str'],
@@ -61,4 +71,40 @@ function _twitterarchive() {
     }
     return theme('tweet_output', array('tweets' => $tweets));
   }
+}
+
+/**
+ * Preg replace callback function for converting links in tweets to real links
+ *
+ * @param $matches
+ *   The regular expression matches
+ * @return
+ *   A link
+ */
+function _tweet_convert_links($matches) {
+  return l($matches[1], $matches[1], array('absolute' => TRUE));
+}
+
+/**
+ * Preg replace callback function for converting hashtags to links
+ *
+ * @param $matches
+ *   The regular expression matches
+ * @return
+ *   A link
+ */
+function _tweet_convert_hashtags($matches) {
+  return l($matches[1], 'https://twitter.com/search?q=' . urlencode($matches[1]), array('absolute' => TRUE));
+}
+
+/**
+ * Preg replace callback function for converting @usernames to links
+ *
+ * @param $matches
+ *   The regular expression matches
+ * @return
+ *   A link
+ */
+function _tweet_convert_usernames($matches) {
+  return l('@' . $matches[1], 'https://twitter.com/' . $matches[1], array('absolute' => TRUE));
 }
