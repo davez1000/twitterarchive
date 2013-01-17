@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ *
+ * 5 minute module for displaying Twitterarchive drupal from JSON
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function twitterarchive_menu() {
+  $items['twitterarchive'] = array(
+    'page callback' => '_twitterarchive',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function twitterarchive_theme() {
+  return array(
+    'tweet_output' => array(
+      'variables' => array('tweets' => NULL),
+      'template' => 'templates/tweet_output',
+    ),
+  );
+}
+
+/**
+ * Callback function for 'twitterarchive'
+ */
+function _twitterarchive() {
+  $data = drupal_get_path('module', 'twitterarchive') . '/data/2013_01.js';
+  $data = file_get_contents($data);
+  if ($data) {
+    // remove first line and output the data to an array
+    $data = explode("\n", $data);
+    array_shift($data);
+    $data = implode("\n", $data);
+    $data = drupal_json_decode($data);
+
+    $tweets = array();
+    foreach ($data as $item) {
+      // create @username links and http links in text
+      // https://twitter.com/search?q=%23Facebook
+      $item['text'] = preg_replace('/(https?:\/\/\S+)/ie', "l('\\1', '\\1', array('absolute' => TRUE))", $item['text']);
+      $item['text'] = preg_replace('/(#[a-zA-Z_0-9]+)/ie', "l('\\1', 'https://twitter.com/search?q=' . urlencode('\\1'), array('absolute' => TRUE))", $item['text']);
+      $item['text'] = preg_replace('/@([a-zA-Z_0-9]+)/ie', "l('@\\1', 'https://twitter.com/\\1', array('absolute' => TRUE))", $item['text']);
+
+      $tweets[] = array(
+        'id' => $item['id_str'],
+        'source' => $item['source'],
+        'text' => $item['text'],
+        'created' => $item['created_at'],
+        'name' => $item['user']['screen_name'],
+      );
+    }
+    return theme('tweet_output', array('tweets' => $tweets));
+  }
+}

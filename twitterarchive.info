@@ -1,0 +1,13 @@
+name = TwitterArchive
+description = Playing around with the twitterarchive
+package = DBO
+version = 7.x
+core = 7.x
+
+;dependencies[] = categories
+;dependencies[] = list
+;dependencies[] = date
+;dependencies[] = link
+
+files[] = twitterarchive.module
+files[] = twitterarchive.install
