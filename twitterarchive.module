@@ -3,19 +3,167 @@
 /**
  * @file
  *
- * Module for importing Twitterarchive data from JSON data files into the Twitterarchive content type
+ * Module for importing Twitterarchive data from JSON data files into the Twitterarchive entity
  */
+
+include_once drupal_get_path('module', 'twitterarchive') . '/includes/twitterarchive.controller.inc';
+
+/**
+ * Implements hook_permission().
+ */
+function twitterarchive_permission() {
+  return array(
+    'administer twitterarchives' =>  array(
+      'title' => t('Administer Twitterarchives'),
+      'description' => t(''),
+    ),
+    'view twitterarchives' =>  array(
+      'title' => t('View Twitterarchives'),
+      'description' => t(''),
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function twitterarchive_entity_info() {
+  $entity_info['twitterarchive'] = array(
+    'label' => t('Twitterarchive'),
+    'base table' => 'twitterarchive',
+    'uri callback' => 'twitterarchive_uri',
+    'controller class' => 'twitterarchiveEntityController',
+    'views controller class' => 'EntityDefaultViewsController',
+    'module' => 'twitterarchive',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+      'id' => 'pid',
+    ),
+    'static cache' => FALSE,
+    'bundles' => array(
+      'twitterarchive'=> array(
+        'label' => 'Twitterarchive',
+        'admin' => array(
+          'path' => 'admin/structure/twitterarchive/manage',
+          'access arguments' => array('administer twitterarchive'),
+        ),
+      ),
+    ),
+    'view modes' => array(
+      'full' => array(
+        'label' => t('Full'),
+        'custom settings' =>  FALSE,
+      ),
+    ),
+  );
+  return $entity_info;
+}
+
+/**
+ * Entity URI callback
+ */
+function twitterarchive_uri($twitterarchive) {
+  return array(
+    'path' => 'twitterarchive/' . $twitterarchive->id,
+  );
+}
+
+function twitterarchive_load($pid = NULL, $reset = FALSE) {
+    $pids = (isset($pid) ? array($pid) : array());
+    $formsub = twitterarchive_load_multiple($pids, $reset);
+    return $formsub ? reset($formsub) : FALSE;
+}
+
+function twitterarchive_load_multiple($pids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('twitterarchive', $pids, $conditions, $reset);
+}
 
 /**
  * Implements hook_menu().
  */
 function twitterarchive_menu() {
-  $items['twitterarchive'] = array(
-    'page callback' => '_twitterarchive',
-    'access arguments' => array('access content'),
+  $items['admin/structure/twitterarchive/manage'] = array(
+    'title' => 'Twitterarchive Admin',
+    'description' => 'Manage twitterarchive structure',
+    'page callback' => 'twitterarchive_manage',
+    'access arguments' => array('administer twitterarchives'),
+  );
+  $items['twitterarchive/%twitterarchive'] = array(
+    'title callback' => 'twitterarchive_page_title',
+    'title arguments' => array(1),
+    'page callback' => 'twitterarchive_page_view',
+    'page arguments' => array(1),
+    'access arguments' => array('view twitterarchives'),
     'type' => MENU_CALLBACK,
   );
   return $items;
+}
+
+function twitterarchive_page_title($twitterarchive) {
+  return t('Tweet pid: @pid', array('@pid' => $twitterarchive->pid));
+}
+
+/**
+ * Callback function for [admin/structure/twitterarchive/manage]
+ */
+function twitterarchive_manage() {
+  $content = array();
+  $content[] = array(
+    '#type' => 'item',
+    '#markup' => t('Administration page for Twitterarchive entities')
+  );
+  $content['table'] = twitterarchive_list_entities();
+  return $content;
+}
+
+function twitterarchive_list_entities() {
+  $content = array();
+
+  // In this basic example we know that there won't be many entities,
+  // so just load them all. @see pager_example.module to implement a pager.
+  // Most implementations would probably do this with a view using views module,
+  // but we avoid using non-core features in the Examples project.
+  $entities = twitterarchive_load_multiple(FALSE);
+
+    if (!empty($entities)) {
+      foreach ($entities as $entity) {
+        $rows[] = array(
+          'data' => array(
+            'id' => $entity->pid,
+            'tweet_id' => $entity->tweet_id,
+            'tweettext' => $entity->tweettext,
+            'username' => $entity->username,
+            'created' => date('j F Y h:i:s', $entity->created),
+            'delete' => l('delete', 'twitterarchive/delete' . $entity->pid),
+          ),
+        );
+      }
+      $content['entity_table'] = array(
+        '#theme' => 'table',
+        '#rows' => $rows,
+        '#header' => array(t('PID'), t('Tweet ID'), t('Tweet'), t('User'), t('Created'), t('')),
+      );
+    } else {
+      $content[] = array(
+        '#type' => 'item',
+        '#markup' => t('No Twitterarchive entities currently exist!'),
+      );
+    }
+  return $content;
+}
+
+/**
+ * Callback function for [twitterarchive/%twitterarchive]
+ */
+function twitterarchive_page_view($twitterarchive, $view_mode = 'full') {
+  $twitterarchive->content = array();
+
+  // Build fields content.
+  field_attach_prepare_view('twitterarchive', array($twitterarchive->pid => $twitterarchive), $view_mode);
+  entity_prepare_view('twitterarchive', array($twitterarchive->pid => $twitterarchive));
+  $twitterarchive->content += field_attach_view('twitterarchive', $twitterarchive, $view_mode);
+
+  return $twitterarchive->content;
 }
 
 /**

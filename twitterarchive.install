@@ -3,62 +3,109 @@
 /**
  * @file
  *
- * Defines install processes for twitterarchive type
+ * Defines install processes for twitterarchive entity type
  */
+
+/**
+ * Implements hook_schema().
+ */
+function twitterarchive_schema() {
+  $schema = array();
+  $schema['twitterarchive'] = array(
+    'description' => t('Twitterarchive entities'),
+    'fields' => array(
+      'pid' => array(
+        'description' => t('The primary identifier for a tweet (not the actual tweet ID!)'),
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'tweet_id' => array(
+        'description' => t('The actual Twitter tweet ID'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'tweettext' => array(
+        'description' => t('The tweet text'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'username' => array(
+        'description' => t('The username of the tweeter'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'created' => array(
+        'description' => t('The created timestamp of the tweet'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+     ),
+    // 'indexes' => array('tweettext' => array('tweettext')),
+    'primary key' => array('pid'),
+  );
+  return $schema;
+}
 
 /**
  * Implements hook_install().
  */
-function twitterarchive_install() {
-  // use get_t() to get the name of our localization function for translation
-  // during install, when t() is not available.
-  $t = get_t();
+// function twitterarchive_install() {
+//   // use get_t() to get the name of our localization function for translation
+//   // during install, when t() is not available.
+//   $t = get_t();
 
-  // Define the node type.
-  $twitterarchive = array(
-    'type' => 'twitterarchive',
-    'name' => $t('Twitterarchive'),
-    'base' => 'node_content',
-    'description' => $t('Twitterarchive tweets.'),
-    'has_title' => TRUE,
-    'title_label' => $t('Tweet')
-  );
+//   // Define the node type.
+//   $twitterarchive = array(
+//     'type' => 'twitterarchive',
+//     'name' => $t('Twitterarchive'),
+//     'base' => 'node_content',
+//     'description' => $t('Twitterarchive tweets.'),
+//     'has_title' => TRUE,
+//     'title_label' => $t('Tweet')
+//   );
 
-  // Complete the node type definition by setting any defaults not explicitly
-  // declared above.
-  // http://api.drupal.org/api/function/node_type_set_defaults/7
-  $content_type = node_type_set_defaults($twitterarchive);
+//   // Complete the node type definition by setting any defaults not explicitly
+//   // declared above.
+//   // http://api.drupal.org/api/function/node_type_set_defaults/7
+//   $content_type = node_type_set_defaults($twitterarchive);
 
-  // disable comments
-  variable_set('comment_twitterarchive', COMMENT_NODE_HIDDEN);
+//   // disable comments
+//   variable_set('comment_twitterarchive', COMMENT_NODE_HIDDEN);
 
-  // Save the content type
-  node_type_save($content_type);
+//   // Save the content type
+//   node_type_save($content_type);
 
-}
+// }
 
 
 /**
  * Implements hook_uninstall().
  */
-function twitterarchive_uninstall() {
-  // Gather all the content that might have been created while this
-  $sql = "SELECT nid FROM {node} n WHERE n.type = :type";
-  $result = db_query($sql, array(':type' => 'twitterarchive'));
-  $nids = array();
-  foreach ($result as $row) {
-    $nids[] = $row->nid;
-  }
+// function twitterarchive_uninstall() {
+//   // Gather all the content that might have been created while this
+//   $sql = "SELECT nid FROM {node} n WHERE n.type = :type";
+//   $result = db_query($sql, array(':type' => 'twitterarchive'));
+//   $nids = array();
+//   foreach ($result as $row) {
+//     $nids[] = $row->nid;
+//   }
 
-  // Delete all the nodes
-  // http://api.drupal.org/api/function/node_delete_multiple/7
-  node_delete_multiple($nids);
+//   // Delete all the nodes
+//   // http://api.drupal.org/api/function/node_delete_multiple/7
+//   node_delete_multiple($nids);
 
-  // Delete the content type
-  // http://api.drupal.org/api/function/node_type_delete/7
-  node_type_delete('twitterarchive');
+//   // Delete the content type
+//   // http://api.drupal.org/api/function/node_type_delete/7
+//   node_type_delete('twitterarchive');
 
-  // Purge all field information
-  // http://api.drupal.org/api/function/field_purge_batch/7
-  field_purge_batch(1000);
-}
+//   // Purge all field information
+//   // http://api.drupal.org/api/function/field_purge_batch/7
+//   field_purge_batch(1000);
+// }
