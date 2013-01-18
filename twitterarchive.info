@@ -1,5 +1,5 @@
 name = TwitterArchive
-description = Playing around with the twitterarchive
+description = Defines Twitterarchive entity and imports data JS files via drush
 package = DBO
 version = 7.x
 core = 7.x

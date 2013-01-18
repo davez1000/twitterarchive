@@ -40,6 +40,12 @@ function twitterarchive_schema() {
         'not null' => TRUE,
         'default' => ''
       ),
+      'status' => array(
+        'description' => t('Boolean indicating whether the tweet is published.'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
       'created' => array(
         'description' => t('The created timestamp of the tweet'),
         'type' => 'int',
