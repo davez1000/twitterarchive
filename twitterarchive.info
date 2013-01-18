@@ -1,13 +1,9 @@
 name = TwitterArchive
 description = Defines Twitterarchive entity and imports data JS files via drush
 package = DBO
-version = 7.x
 core = 7.x
-
-;dependencies[] = categories
-;dependencies[] = list
-;dependencies[] = date
-;dependencies[] = link
-
+dependencies[] = entity
+dependencies[] = field_ui
 files[] = twitterarchive.module
 files[] = twitterarchive.install
+files[] = includes/twitterarchive.controller.inc

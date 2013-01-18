@@ -116,13 +116,16 @@ function twitterarchive_manage() {
   return $content;
 }
 
+/**
+ * Creates a table view of entity records.
+ *
+ * @return
+ *   Entity table.
+ */
 function twitterarchive_list_entities() {
   $content = array();
 
-  // In this basic example we know that there won't be many entities,
-  // so just load them all. @see pager_example.module to implement a pager.
-  // Most implementations would probably do this with a view using views module,
-  // but we avoid using non-core features in the Examples project.
+  // load entities
   $entities = twitterarchive_load_multiple(FALSE);
 
     if (!empty($entities)) {
