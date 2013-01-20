@@ -6,7 +6,7 @@
  * Controller class for Twitterarchive entity
  */
 
-class twitterarchiveEntityController extends DrupalDefaultEntityController {
+class twitterarchiveEntityController extends EntityAPIController {
 
   /**
    * Permanently saves the given entity.

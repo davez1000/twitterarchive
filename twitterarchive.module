@@ -32,6 +32,7 @@ function twitterarchive_entity_info() {
     'label' => t('Twitterarchive'),
     'base table' => 'twitterarchive',
     'uri callback' => 'twitterarchive_uri',
+    'entity class' => 'Entity',
     'controller class' => 'twitterarchiveEntityController',
     'views controller class' => 'EntityDefaultViewsController',
     'module' => 'twitterarchive',
@@ -64,7 +65,7 @@ function twitterarchive_entity_info() {
  */
 function twitterarchive_uri($twitterarchive) {
   return array(
-    'path' => 'twitterarchive/' . $twitterarchive->id,
+    'path' => 'twitterarchive/' . $twitterarchive->pid,
   );
 }
 
@@ -87,14 +88,6 @@ function twitterarchive_menu() {
     'description' => 'Manage twitterarchive structure',
     'page callback' => 'twitterarchive_manage',
     'access arguments' => array('administer twitterarchives'),
-  );
-  $items['twitterarchive/%twitterarchive'] = array(
-    'title callback' => 'twitterarchive_page_title',
-    'title arguments' => array(1),
-    'page callback' => 'twitterarchive_page_view',
-    'page arguments' => array(1),
-    'access arguments' => array('view twitterarchives'),
-    'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -274,5 +267,22 @@ function twitterarchive_drush_import() {
 
       drush_print(t("\nTweet ID: @id imported\n", array('@id' => $item['id_str'])));
     }
+  }
+}
+
+/**
+ * Implements hook_views_pre_render()
+ */
+function twitterarchive_views_pre_render(&$view) {
+  switch ($view->name) {
+    case 'twitterarchive':
+      if (!empty($view->result)) {
+        foreach ($view->result as $key => $item) {
+          if (isset($view->result[$key]->twitterarchive_tweettext) && !empty($view->result[$key]->twitterarchive_tweettext)) {
+            $view->result[$key]->twitterarchive_tweettext = twitterarchive_format_tweet($view->result[$key]->twitterarchive_tweettext);
+          }
+        }
+      }
+      break;
   }
 }

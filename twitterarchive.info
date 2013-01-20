@@ -4,6 +4,7 @@ package = DBO
 core = 7.x
 dependencies[] = entity
 dependencies[] = field_ui
+dependencies[] = views
 files[] = twitterarchive.module
 files[] = twitterarchive.install
 files[] = includes/twitterarchive.controller.inc
